@@ -1,0 +1,23 @@
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.summit.camel.opc</groupId>
+    <artifactId>camel-opc-parent</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>${project.artifactId} - ${project.version}</name>
+    <repositories>
+        <!-- Summit built repository of the latest* utgard libraries -->
+        <repository>
+            <id>summit_utgard</id>
+            <releases/>
+            <snapshots/>
+            <name>OPC Browser GitHub</name>
+            <url>http://summitsystemsinc.github.com/netbeans-opc-browser/repo/</url>
+        </repository>
+    </repositories>
+    <properties>
+        <camel.version>2.9.2</camel.version>
+    </properties>
+</project>
