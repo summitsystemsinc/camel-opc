@@ -17,22 +17,35 @@
 package com.summit.camel.opc;
 
 import java.net.UnknownHostException;
+import java.util.Collection;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import org.apache.camel.Consumer;
+import org.apache.camel.EndpointConfiguration;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.impl.DefaultEndpoint;
+import org.apache.camel.impl.DefaultPollingEndpoint;
 import org.jinterop.dcom.common.JIException;
 import org.openscada.opc.lib.common.AlreadyConnectedException;
 import org.openscada.opc.lib.common.ConnectionInformation;
+import org.openscada.opc.lib.common.NotConnectedException;
+import org.openscada.opc.lib.da.AddFailedException;
+import org.openscada.opc.lib.da.DuplicateGroupException;
+import org.openscada.opc.lib.da.Group;
+import org.openscada.opc.lib.da.Item;
 import org.openscada.opc.lib.da.Server;
+import org.openscada.opc.lib.da.browser.Branch;
+import org.openscada.opc.lib.da.browser.Leaf;
+import org.openscada.opc.lib.da.browser.TreeBrowser;
 
 /**
  * Represents a opcda2 endpoint.
  */
-public class Opcda2Endpoint extends DefaultEndpoint {
+public class Opcda2Endpoint extends DefaultPollingEndpoint {
 
     private String domain = "localhost";
     private String host = "localhost";
@@ -42,6 +55,10 @@ public class Opcda2Endpoint extends DefaultEndpoint {
     private String password;
     private int poolSize = 2;
     private Server opcServer;
+    private Group opcGroup;
+    private Map<String, Item> opcItems = new TreeMap<String, Item>();
+    
+    private boolean forceHardwareRead = false;
 
     public Opcda2Endpoint() {
     }
@@ -56,11 +73,13 @@ public class Opcda2Endpoint extends DefaultEndpoint {
 
     @Override
     public Producer createProducer() throws Exception {
+        initializeServerConnection();
         return new Opcda2Producer(this);
     }
 
     @Override
     public Consumer createConsumer(Processor processor) throws Exception {
+        initializeServerConnection();
         return new Opcda2Consumer(this, processor);
     }
 
@@ -124,43 +143,90 @@ public class Opcda2Endpoint extends DefaultEndpoint {
     public void setHost(String host) {
         this.host = host;
     }
-    
+
     protected Server getOpcServer() {
         return opcServer;
-    }    
-    
+    }
+
     /**
-     * 
+     *
      * @return A connection to this endpoints opc server.
      * @throws IllegalArgumentException
      * @throws UnknownHostException
      * @throws JIException
-     * @throws AlreadyConnectedException 
+     * @throws AlreadyConnectedException
      */
-    public Server getServerConnection() throws IllegalArgumentException, UnknownHostException, JIException, AlreadyConnectedException{
+    private void initializeServerConnection() throws OPCConnectionException {
         if (getOpcServer() == null) {
-            if(getClsId() == null && getProgId() == null){
+
+            if (getClsId() == null && getProgId() == null) {
                 throw new OPCConnectionException("clsId OR progId MUST BE SET!");
             }
+
             ConnectionInformation connInfo = new ConnectionInformation();
-            
+
             connInfo.setClsid(getClsId());
             connInfo.setProgId(getProgId());
             connInfo.setHost(getHost());
             connInfo.setDomain(getDomain());
             connInfo.setUser(getUsername());
             connInfo.setPassword(getPassword());
-            
+
             ScheduledExecutorService execService =
                     Executors.newScheduledThreadPool(
                     getPoolSize(),
                     new Opcda2EndpointThreadFactory());
-            
-            opcServer = new Server(connInfo, execService);
-            opcServer.connect();
-        }
 
-        return opcServer;
+            opcServer = new Server(connInfo, execService);
+
+            try {
+                opcServer.connect();
+
+                opcGroup = opcServer.addGroup(getId());
+            } catch (Exception ex) {
+                throw new OPCConnectionException(ex.getMessage(), ex);
+            }
+            EndpointConfiguration cfg = getEndpointConfiguration();
+            String opcTreePath = cfg.getParameter("path");
+            String[] pathArray = opcTreePath.split("/");
+            try {
+                TreeBrowser treeBrowser = opcServer.getTreeBrowser();
+                Branch root = treeBrowser.browse();
+                Branch parent = root;
+
+                for (int i = 0; i < pathArray.length; i++) {
+                    boolean found = false;
+                    //This should handle "//" and the first /
+                    if(pathArray[i].isEmpty()){
+                        continue;
+                    }
+                    for (Branch candidate : parent.getBranches()) {
+                        if (candidate.getName().equals(pathArray[i])) {
+                            parent = candidate;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        throw new OPCConnectionException("Unable to find sub-group: " + pathArray[i]);
+                    }
+                }
+                populateItemsMapRecursive(parent);
+            } catch (Exception ex) {
+                throw new OPCConnectionException(ex.getMessage(), ex);
+            }
+        }
+    }
+
+    public void populateItemsMapRecursive(Branch parent) throws JIException, AddFailedException {
+        for (Leaf l : parent.getLeaves()) {
+            String itemId = l.getItemId();
+            Item i = opcGroup.addItem(itemId);
+            opcItems.put(itemId, i);
+        }
+        for(Branch child : parent.getBranches()){
+            populateItemsMapRecursive(child);
+        }
     }
 
     /**
@@ -205,6 +271,20 @@ public class Opcda2Endpoint extends DefaultEndpoint {
         this.progId = progId;
     }
 
+    /**
+     * @return the forceHardwareRead
+     */
+    public boolean isForceHardwareRead() {
+        return forceHardwareRead;
+    }
+
+    /**
+     * @param forceHardwareRead the forceHardwareRead to set
+     */
+    public void setForceHardwareRead(boolean forceHardwareRead) {
+        this.forceHardwareRead = forceHardwareRead;
+    }
+
     private final class Opcda2EndpointThreadFactory implements ThreadFactory {
 
         int count = 0;
@@ -214,5 +294,17 @@ public class Opcda2Endpoint extends DefaultEndpoint {
             Thread t = new Thread(r, Opcda2Endpoint.this.getId() + "_" + count);
             return t;
         }
+    }
+
+    public Collection<String> getOpcItemIds() {
+        return opcItems.keySet();
+    }
+
+    public Collection<Item> getOpcItems() {
+        return opcItems.values();
+    }
+
+    public Item getOpcItem(String itemId) {
+        return opcItems.get(itemId);
     }
 }

@@ -19,7 +19,7 @@ package com.summit.camel.opc;
  *
  * @author Justin Smith <justin.smith@summitsystemsinc.com>
  */
-public class OPCConnectionException extends RuntimeException {
+public class OPCConnectionException extends Exception {
 
     public OPCConnectionException(String message, Throwable cause) {
         super(message, cause);

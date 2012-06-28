@@ -24,7 +24,7 @@ import org.apache.camel.impl.DefaultComponent;
  * Represents the component that manages {@link opcda2Endpoint}.
  */
 public class Opcda2Component extends DefaultComponent {
-
+    
     @Override
     protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
         Endpoint endpoint = new Opcda2Endpoint(uri, this);

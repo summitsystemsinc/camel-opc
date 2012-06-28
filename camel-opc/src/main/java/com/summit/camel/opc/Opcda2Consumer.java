@@ -17,37 +17,47 @@
 package com.summit.camel.opc;
 
 import java.net.UnknownHostException;
-import java.util.Date;
+import java.util.Map;
+import java.util.TreeMap;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.impl.ScheduledPollConsumer;
 import org.jinterop.dcom.common.JIException;
 import org.openscada.opc.lib.common.AlreadyConnectedException;
-import org.openscada.opc.lib.da.Server;
+import org.openscada.opc.lib.da.Item;
+import org.openscada.opc.lib.da.ItemState;
 
 /**
  * The opcda2 consumer.
  */
 public class Opcda2Consumer extends ScheduledPollConsumer {
     private final Opcda2Endpoint endpoint;
-
-    private Server opcServer;
+    
+    private boolean forceHardwareRead;
     
     public Opcda2Consumer(Opcda2Endpoint endpoint, Processor processor) throws IllegalArgumentException, UnknownHostException, JIException, AlreadyConnectedException {
         super(endpoint, processor);
         this.endpoint = endpoint;
         
-        opcServer = endpoint.getServerConnection();
+        forceHardwareRead = endpoint.isForceHardwareRead();
     }
 
     @Override
     protected int poll() throws Exception {
         Exchange exchange = endpoint.createExchange();
 
-        // create a message body
-        Date now = new Date();
-        exchange.getIn().setBody("Hello World! The time is " + now);
+        Map<String,ItemState> data = new TreeMap<String, ItemState>();
 
+        for(String key : endpoint.getOpcItemIds()){
+            Item item = endpoint.getOpcItem(key);
+            //TODO this is not serializable... we'll need our own source for this. Dumb.
+            ItemState is = item.read(isForceHardwareRead());
+            
+            data.put(key, is);
+        }
+        
+        exchange.getOut().setBody(data);
+        
         try {
             // send message to next processor in the route
             getProcessor().process(exchange);
@@ -58,5 +68,12 @@ public class Opcda2Consumer extends ScheduledPollConsumer {
                 getExceptionHandler().handleException("Error processing exchange", exchange, exchange.getException());
             }
         }
+    }
+
+    /**
+     * @return the forceHardwareRead
+     */
+    public boolean isForceHardwareRead() {
+        return forceHardwareRead;
     }
 }
