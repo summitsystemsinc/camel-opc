@@ -16,6 +16,9 @@
  */
 package com.summit.camel.opc;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.util.Properties;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit4.CamelTestSupport;
@@ -28,47 +31,58 @@ public class Opcda2ComponentTest extends CamelTestSupport {
     String password;
     String clsid;
     String host;
-    
+    Properties props;
+
     @Test
     public void testopcda2() throws Exception {
-        initSettings();
-        
         MockEndpoint mock = getMockEndpoint("mock:result");
-        mock.expectedMinimumMessageCount(1);
-        
+        mock.expectedMinimumMessageCount(5);
+
         log.info("Domain: " + domain);
         log.info("User: " + user);
         log.info("Password: " + password);
         log.info("Host: " + host);
         log.info("ClsId: " + clsid);
-        
+
         assertMockEndpointsSatisfied();
+        log.info("Got " + mock.getExpectedCount() + " exchanges.");
     }
-    
-    public void initSettings() throws Exception{
-        domain = System.getProperty("opc.domain");
-        user = System.getProperty("opc.user");
-        password = System.getProperty("opc.password");
-        host = System.getProperty("opc.host");
-        clsid = System.getProperty("opc.clsid");
+
+    private void initProperties() throws Exception{
         
+        props = new Properties();
+        props.load(Opcda2ComponentTest.class.getResourceAsStream("opcServer.properties"));
+
+        File localPropsFile = new File(System.getProperty("user.home") + "/.camel-opc-test", "opcServer.properties");
         
+        if (localPropsFile.exists()) {
+            props.load(new FileInputStream(localPropsFile));
+        }
         
-        if(domain == null || user == null || password == null || host == null || clsid == null){
+        domain = props.getProperty("opc.domain");
+        user = props.getProperty("opc.user");
+        password = props.getProperty("opc.password");
+        host = props.getProperty("opc.host");
+        clsid = props.getProperty("opc.clsid");
+
+        if (domain == null || user == null || password == null || host == null || clsid == null) {
             //TODO hint at the fields.
             throw new Exception("All opc settings must be populated to run this test!");
         }
     }
-
+    
     @Override
     protected RouteBuilder createRouteBuilder() throws Exception {
+        initProperties();
+        
         return new RouteBuilder() {
 
             @Override
             public void configure() {
-                String uriString = "opcda2://foo?host=" + host + "&clsId=" + clsid + "&username=" + user + "&password=" + password + "&domain=" + domain;
-                
-                from(uriString).to("mock:result");
+                //TODO externalize this to the properties file.
+                String uriString = "opcda2:opcdaTest/Simulation Items/Bucket Brigade?delay=500&host=" + host + "&clsId=" + clsid + "&username=" + user + "&password=" + password + "&domain=" + domain;
+
+                from(uriString).to("log:OPC_Test?level=info").to("mock:result");
             }
         };
     }
