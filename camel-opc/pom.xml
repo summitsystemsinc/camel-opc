@@ -76,6 +76,12 @@
             <groupId>org.openscada.opc</groupId>
             <artifactId>lib</artifactId>
             <version>0.10</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>j-interop</artifactId>
+                    <groupId>org.kohsuke.jinterop</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.openscada.opc</groupId>
@@ -85,9 +91,9 @@
         
         <!-- we need the real j-interop here... maybe I'll talk with Vikram -->
         <dependency>
-            <groupId>org.kohsuke.jinterop</groupId>
+            <groupId>org.jinterop</groupId>
             <artifactId>j-interop</artifactId>
-            <version>2.0.8-kohsuke-1</version>
+            <version>2.08</version>
         </dependency>
         
     </dependencies>

@@ -31,10 +31,16 @@ public class Opcda2ComponentTest extends CamelTestSupport {
     
     @Test
     public void testopcda2() throws Exception {
+        initSettings();
+        
         MockEndpoint mock = getMockEndpoint("mock:result");
         mock.expectedMinimumMessageCount(1);
-
-        initSettings();
+        
+        log.info("Domain: " + domain);
+        log.info("User: " + user);
+        log.info("Password: " + password);
+        log.info("Host: " + host);
+        log.info("ClsId: " + clsid);
         
         assertMockEndpointsSatisfied();
     }
@@ -45,6 +51,8 @@ public class Opcda2ComponentTest extends CamelTestSupport {
         password = System.getProperty("opc.password");
         host = System.getProperty("opc.host");
         clsid = System.getProperty("opc.clsid");
+        
+        
         
         if(domain == null || user == null || password == null || host == null || clsid == null){
             //TODO hint at the fields.
@@ -58,7 +66,9 @@ public class Opcda2ComponentTest extends CamelTestSupport {
 
             @Override
             public void configure() {
-                from("opcda2://foo?host=test").to("opcda2://bar").to("mock:result");
+                String uriString = "opcda2://foo?host=" + host + "&clsId=" + clsid + "&username=" + user + "&password=" + password + "&domain=" + domain;
+                
+                from(uriString).to("mock:result");
             }
         };
     }
