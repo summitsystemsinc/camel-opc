@@ -1,6 +1,5 @@
-
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.summit.camel.opc</groupId>
     <artifactId>camel-opc-parent</artifactId>
@@ -19,5 +18,9 @@
     </repositories>
     <properties>
         <camel.version>2.9.2</camel.version>
+        <netbeans.hint.license>apache20</netbeans.hint.license>
     </properties>
+    <modules>
+        <module>camel-opc</module>
+    </modules>
 </project>
