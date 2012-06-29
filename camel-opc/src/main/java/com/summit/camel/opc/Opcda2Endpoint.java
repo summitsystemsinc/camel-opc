@@ -28,13 +28,10 @@ import org.apache.camel.EndpointConfiguration;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
 import org.apache.camel.impl.DefaultEndpoint;
-import org.apache.camel.impl.DefaultPollingEndpoint;
 import org.jinterop.dcom.common.JIException;
 import org.openscada.opc.lib.common.AlreadyConnectedException;
 import org.openscada.opc.lib.common.ConnectionInformation;
-import org.openscada.opc.lib.common.NotConnectedException;
 import org.openscada.opc.lib.da.AddFailedException;
-import org.openscada.opc.lib.da.DuplicateGroupException;
 import org.openscada.opc.lib.da.Group;
 import org.openscada.opc.lib.da.Item;
 import org.openscada.opc.lib.da.Server;
@@ -45,7 +42,7 @@ import org.openscada.opc.lib.da.browser.TreeBrowser;
 /**
  * Represents a opcda2 endpoint.
  */
-public class Opcda2Endpoint extends DefaultPollingEndpoint {
+public class Opcda2Endpoint extends DefaultEndpoint {
 
     private String domain = "localhost";
     private String host = "localhost";
@@ -54,8 +51,11 @@ public class Opcda2Endpoint extends DefaultPollingEndpoint {
     private String username;
     private String password;
     private int poolSize = 2;
+    private int delay = 500;
     private Server opcServer;
     private Group opcGroup;
+    private boolean diffOnly = false;
+    private boolean valuesOnly = true;
     private Map<String, Item> opcItems = new TreeMap<String, Item>();
     
     private boolean forceHardwareRead = false;
@@ -80,7 +80,8 @@ public class Opcda2Endpoint extends DefaultPollingEndpoint {
     @Override
     public Consumer createConsumer(Processor processor) throws Exception {
         initializeServerConnection();
-        return new Opcda2Consumer(this, processor);
+        Opcda2Consumer retVal = new Opcda2Consumer(this, processor);
+        return retVal;
     }
 
     @Override
@@ -283,6 +284,48 @@ public class Opcda2Endpoint extends DefaultPollingEndpoint {
      */
     public void setForceHardwareRead(boolean forceHardwareRead) {
         this.forceHardwareRead = forceHardwareRead;
+    }
+
+    /**
+     * @return the delay
+     */
+    public int getDelay() {
+        return delay;
+    }
+
+    /**
+     * @param delay the delay to set
+     */
+    public void setDelay(int delay) {
+        this.delay = delay;
+    }
+
+    /**
+     * @return the diffOnly
+     */
+    public boolean isDiffOnly() {
+        return diffOnly;
+    }
+
+    /**
+     * @param diffOnly the diffOnly to set
+     */
+    public void setDiffOnly(boolean diffOnly) {
+        this.diffOnly = diffOnly;
+    }
+
+    /**
+     * @return the valuesOnly
+     */
+    public boolean isValuesOnly() {
+        return valuesOnly;
+    }
+
+    /**
+     * @param valuesOnly the valuesOnly to set
+     */
+    public void setValuesOnly(boolean valuesOnly) {
+        this.valuesOnly = valuesOnly;
     }
 
     private final class Opcda2EndpointThreadFactory implements ThreadFactory {

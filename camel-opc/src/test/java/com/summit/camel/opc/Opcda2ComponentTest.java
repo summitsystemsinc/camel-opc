@@ -80,7 +80,7 @@ public class Opcda2ComponentTest extends CamelTestSupport {
             @Override
             public void configure() {
                 //TODO externalize this to the properties file.
-                String uriString = "opcda2:opcdaTest/Simulation Items/Bucket Brigade?delay=500&host=" + host + "&clsId=" + clsid + "&username=" + user + "&password=" + password + "&domain=" + domain;
+                String uriString = "opcda2:opcdaTest/Simulation Items/Bucket Brigade?delay=1000&host=" + host + "&clsId=" + clsid + "&username=" + user + "&password=" + password + "&domain=" + domain;
 
                 from(uriString).to("log:OPC_Test?level=info").to("mock:result");
             }
