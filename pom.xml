@@ -9,11 +9,15 @@
     <repositories>
         <!-- Summit built repository of the latest* utgard libraries -->
         <repository>
-            <id>summit_utgard</id>
-            <releases/>
-            <snapshots/>
-            <name>OPC Browser GitHub</name>
-            <url>http://summitsystemsinc.github.com/netbeans-opc-browser/repo/</url>
+            <id>summitRepo-public-releases</id>
+            <name>summitRepo-releases</name>
+            <url>http://devel.summitsystemsinc.net/mvnrep/public</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
         </repository>
     </repositories>
     <properties>
