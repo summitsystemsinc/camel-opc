@@ -11,7 +11,7 @@
         <repository>
             <id>summitRepo-public-releases</id>
             <name>summitRepo-releases</name>
-            <url>http://devel.summitsystemsinc.net/mvnrep/public</url>
+            <url>http://devel.summitsystemsinc.net/artifactory/public</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
