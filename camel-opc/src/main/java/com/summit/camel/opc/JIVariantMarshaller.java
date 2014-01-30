@@ -19,10 +19,11 @@ package com.summit.camel.opc;
  * limitations under the License.
  * #L%
  */
-
-
+import java.math.BigDecimal;
 import org.jinterop.dcom.common.JIException;
 import org.jinterop.dcom.core.JIArray;
+import org.jinterop.dcom.core.JICurrency;
+import org.jinterop.dcom.core.JIString;
 import org.jinterop.dcom.core.JIVariant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,7 @@ import org.slf4j.LoggerFactory;
  */
 public class JIVariantMarshaller {
 
-    private static Logger logger = LoggerFactory.getLogger(JIVariantMarshaller.class);
+    private static final Logger logger = LoggerFactory.getLogger(JIVariantMarshaller.class);
 
     public static Object toJavaType(JIVariant variant) throws JIException {
         int type = variant.getType();
@@ -41,7 +42,7 @@ public class JIVariantMarshaller {
         if ((type & JIVariant.VT_ARRAY) == JIVariant.VT_ARRAY) {
             JIArray array = variant.getObjectAsArray();
 
-            return jIArrayToJavaArray(array);
+            return jIArrayToJavaArray(array, type);
         } else {
 
             switch (type) {
@@ -73,6 +74,12 @@ public class JIVariantMarshaller {
                     return String.valueOf(variant.getObjectAsString2());
                 case JIVariant.VT_BOOL:
                     return Boolean.valueOf(variant.getObjectAsBoolean());
+                case JIVariant.VT_CY:
+                    JICurrency currency = (JICurrency) variant.getObject();
+
+                    BigDecimal cyRetVal = currencyToBigDecimal(currency);
+
+                    return cyRetVal;
                 default:
                     final String value = variant.getObject().toString();
                     logger.warn(String.format(DEFAULT_MSG, value, variant.getObject().getClass().getName(), Integer.toHexString(type)
@@ -81,10 +88,52 @@ public class JIVariantMarshaller {
             }
         }
     }
+
+    private static BigDecimal currencyToBigDecimal(JICurrency currency) {
+        BigDecimal cyRetVal = new BigDecimal(currency.getUnits() + ((double) currency.getFractionalUnits() / 10000));
+        return cyRetVal;
+    }
+
     public static final String DEFAULT_MSG = "Using default case for variant conversion: %s : %s : %s";
 
-    public static Object[] jIArrayToJavaArray(JIArray jIArray) {
+    public static Object[] jIArrayToJavaArray(JIArray jIArray, int type) {
 
-        return new Object[]{};
+        Object[] objArray = (Object[]) jIArray.getArrayInstance();
+        int arrayLength = objArray.length;
+
+        switch (type ^ JIVariant.VT_ARRAY) {
+            //JInterop seems to be handling most of these to java types already...
+            case JIVariant.VT_I1:
+            case JIVariant.VT_I2:
+            case JIVariant.VT_I4:
+            case JIVariant.VT_I8:
+            case JIVariant.VT_INT:
+            case JIVariant.VT_DATE:
+            case JIVariant.VT_R4:
+            case JIVariant.VT_R8:
+            case JIVariant.VT_UI1:
+            case JIVariant.VT_UI2:
+            case JIVariant.VT_UI4:
+            case JIVariant.VT_UINT:
+            case JIVariant.VT_CY:
+                BigDecimal[] cyRetVal = new BigDecimal[arrayLength];
+                for (int i = 0; i < arrayLength; i++) {
+                    cyRetVal[i] = currencyToBigDecimal((JICurrency) objArray[i]);
+                }
+                return cyRetVal;
+            case JIVariant.VT_BSTR:
+                String[] strRetVal = new String[arrayLength];
+                for (int i = 0; i < arrayLength; i++) {
+                    strRetVal[i] = ((JIString) objArray[i]).getString();
+                }
+                return strRetVal;
+            case JIVariant.VT_BOOL:
+            default:
+                logger.warn(String.format(DEFAULT_MSG, jIArray, jIArray.getArrayClass().getName(), Integer.toHexString(type)
+                ));
+
+        }
+
+        return objArray;
     }
 }
