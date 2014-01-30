@@ -7,13 +7,24 @@
     <packaging>pom</packaging>
     <name>Camel-OPC :: Parent</name>
     <repositories>
-        <!-- Summit built repository of the latest* utgard libraries -->
+        <!-- OpenScada built repository of the latest* utgard libraries -->
         <repository>
-            <id>summitRepo-public-releases</id>
-            <name>summitRepo-releases</name>
-            <url>http://devel.summitsystemsinc.net/artifactory/public</url>
+            <id>openscada-releases</id>
+            <name>OpenScada Releases</name>
+            <url>http://repo.openscada.org/maven/releases</url>
             <releases>
                 <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>openscada-snapshots</id>
+            <name>OpenScada Snapshots</name>
+            <url>http://repo.openscada.org/maven/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
             </releases>
             <snapshots>
                 <enabled>true</enabled>
@@ -39,6 +50,31 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>1.7.5</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openscada.utgard</groupId>
+                <artifactId>org.openscada.opc.lib</artifactId>
+                <version>${utgard.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openscada.utgard</groupId>
+                <artifactId>org.openscada.opc.dcom</artifactId>
+                <version>${utgard.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openscada.jinterop</groupId>
+                <artifactId>org.openscada.jinterop.core</artifactId>
+                <version>${utgard.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openscada.jinterop</groupId>
+                <artifactId>org.openscada.jinterop.deps</artifactId>
+                <version>${utgard.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.samba.jcifs</groupId>
+                <artifactId>jcifs</artifactId>
+                <version>1.3.3</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -68,6 +104,7 @@
         <camel.version>2.12.0</camel.version>
         <netbeans.hint.license>apache20</netbeans.hint.license>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <utgard.version>1.1.0.v20130529</utgard.version>
     </properties>
     <modules>
         <module>camel-opc</module>
