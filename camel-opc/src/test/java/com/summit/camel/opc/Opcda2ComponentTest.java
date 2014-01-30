@@ -19,6 +19,7 @@ package com.summit.camel.opc;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Properties;
+import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit4.CamelTestSupport;
@@ -36,7 +37,6 @@ public class Opcda2ComponentTest extends CamelTestSupport {
     @Test
     public void testopcda2() throws Exception {
         MockEndpoint mock = getMockEndpoint("mock:result");
-        mock.expectedMinimumMessageCount(5);
 
         log.info("Domain: " + domain);
         log.info("User: " + user);
@@ -44,21 +44,27 @@ public class Opcda2ComponentTest extends CamelTestSupport {
         log.info("Host: " + host);
         log.info("ClsId: " + clsid);
 
+        mock.expectedMinimumMessageCount(5);
+
         assertMockEndpointsSatisfied();
-        log.info("Got " + mock.getExpectedCount() + " exchanges.");
+        final int exchanges = mock.getExchanges().size();
+        log.info("Got " + exchanges + " exchanges.");
+        for (Exchange exchange : mock.getExchanges()) {
+            log.info(exchange.getIn().getBody(String.class));
+        }
     }
 
-    private void initProperties() throws Exception{
-        
+    private void initProperties() throws Exception {
+
         props = new Properties();
         props.load(Opcda2ComponentTest.class.getResourceAsStream("opcServer.properties"));
 
         File localPropsFile = new File(System.getProperty("user.home") + "/.camel-opc-test", "opcServer.properties");
-        
+
         if (localPropsFile.exists()) {
             props.load(new FileInputStream(localPropsFile));
         }
-        
+
         domain = props.getProperty("opc.domain");
         user = props.getProperty("opc.user");
         password = props.getProperty("opc.password");
@@ -70,11 +76,11 @@ public class Opcda2ComponentTest extends CamelTestSupport {
             throw new Exception("All opc settings must be populated to run this test!");
         }
     }
-    
+
     @Override
     protected RouteBuilder createRouteBuilder() throws Exception {
         initProperties();
-        
+
         return new RouteBuilder() {
 
             @Override
@@ -82,7 +88,7 @@ public class Opcda2ComponentTest extends CamelTestSupport {
                 //TODO externalize this to the properties file.
                 String uriString = "opcda2:opcdaTest/Simulation Items/Bucket Brigade?delay=1000&host=" + host + "&clsId=" + clsid + "&username=" + user + "&password=" + password + "&domain=" + domain;
 
-                from(uriString).to("log:OPC_Test?level=info").to("mock:result");
+                from(uriString).to("log:OPCTest?level=info").to("mock:result");
             }
         };
     }

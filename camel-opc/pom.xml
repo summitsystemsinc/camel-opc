@@ -28,39 +28,33 @@
     </parent>
 
     <groupId>com.summit.camel.opc</groupId>
-    <artifactId>camel-opc</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>camel-opc_da2</artifactId>
     <packaging>bundle</packaging>
-    <name>OPC Camel component.</name>
-    <description>
-        OPC Camel component, that currently 
-        supports OPC DA 2.0 through Utgard/J-Interop.
+    <name>Camel-OPC :: OPCDA 2 Component</name>
+    <description>OPC Camel component, that currently supports OPC DA 2.0 through Utgard/J-Interop.
     </description>
 
     <dependencies>
         <dependency>
             <groupId>org.apache.camel</groupId>
             <artifactId>camel-core</artifactId>
-            <version>${camel.version}</version>
         </dependency>  
 
-    <!-- for testing -->
+        <!-- for testing -->
         <dependency>
             <groupId>org.apache.camel</groupId>
-            <artifactId>camel-test</artifactId>
-            <version>${camel.version}</version>      
+            <artifactId>camel-test</artifactId>      
             <scope>test</scope>
         </dependency>
-    <!-- logging -->
+        <!-- logging -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.6.1</version>
         </dependency>      
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.13</version>
             <scope>test</scope>
         </dependency>
         
@@ -119,6 +113,14 @@
         <opc.domain>${local.opc.domain}</opc.domain>
         <opc.clsid>${local.opc.clsid}</opc.clsid>
     </properties>
+    <profiles>
+        <profile>
+            <id>run-tests</id>
+            <properties>
+                <skipTests>false</skipTests>
+            </properties>
+        </profile>
+    </profiles>
     <build>
         <defaultGoal>install</defaultGoal>
         <testResources>

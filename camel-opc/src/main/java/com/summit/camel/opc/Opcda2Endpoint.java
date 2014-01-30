@@ -31,7 +31,9 @@ import org.apache.camel.impl.DefaultEndpoint;
 import org.jinterop.dcom.common.JIException;
 import org.openscada.opc.lib.common.AlreadyConnectedException;
 import org.openscada.opc.lib.common.ConnectionInformation;
+import org.openscada.opc.lib.common.NotConnectedException;
 import org.openscada.opc.lib.da.AddFailedException;
+import org.openscada.opc.lib.da.DuplicateGroupException;
 import org.openscada.opc.lib.da.Group;
 import org.openscada.opc.lib.da.Item;
 import org.openscada.opc.lib.da.Server;
@@ -56,7 +58,7 @@ public class Opcda2Endpoint extends DefaultEndpoint {
     private Group opcGroup;
     private boolean diffOnly = false;
     private boolean valuesOnly = true;
-    private Map<String, Item> opcItems = new TreeMap<String, Item>();
+    private final Map<String, Item> opcItems = new TreeMap<String, Item>();
     
     private boolean forceHardwareRead = false;
 
@@ -184,7 +186,17 @@ public class Opcda2Endpoint extends DefaultEndpoint {
                 opcServer.connect();
 
                 opcGroup = opcServer.addGroup(getId());
-            } catch (Exception ex) {
+            } catch (IllegalArgumentException ex) {
+                throw new OPCConnectionException(ex.getMessage(), ex);
+            } catch (UnknownHostException ex) {
+                throw new OPCConnectionException(ex.getMessage(), ex);
+            } catch (JIException ex) {
+                throw new OPCConnectionException(ex.getMessage(), ex);
+            } catch (AlreadyConnectedException ex) {
+                throw new OPCConnectionException(ex.getMessage(), ex);
+            } catch (NotConnectedException ex) {
+                throw new OPCConnectionException(ex.getMessage(), ex);
+            } catch (DuplicateGroupException ex) {
                 throw new OPCConnectionException(ex.getMessage(), ex);
             }
             EndpointConfiguration cfg = getEndpointConfiguration();
