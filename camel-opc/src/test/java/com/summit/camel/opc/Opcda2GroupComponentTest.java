@@ -30,7 +30,7 @@ import org.apache.camel.component.mock.MockEndpoint;
 import org.apache.camel.test.junit4.CamelTestSupport;
 import org.junit.Test;
 
-public class Opcda2ComponentTest extends CamelTestSupport {
+public class Opcda2GroupComponentTest extends CamelTestSupport {
 
     String domain;
     String user;
@@ -62,7 +62,7 @@ public class Opcda2ComponentTest extends CamelTestSupport {
     private void initProperties() throws Exception {
 
         props = new Properties();
-        props.load(Opcda2ComponentTest.class.getResourceAsStream("opcServer.properties"));
+        props.load(Opcda2GroupComponentTest.class.getResourceAsStream("opcServer.properties"));
 
         File localPropsFile = new File(System.getProperty("user.home") + "/.camel-opc-test", "opcServer.properties");
 
@@ -91,7 +91,7 @@ public class Opcda2ComponentTest extends CamelTestSupport {
             @Override
             public void configure() {
                 //TODO externalize this to the properties file.
-                String uriString = "opcda2:opcdaTest/Simulation Items/Bucket Brigade?delay=1000&host=" + host + "&clsId=" + clsid + "&username=" + user + "&password=" + password + "&domain=" + domain;
+                String uriString = "opcda2:opcdaTest/Simulation Items/Random?delay=1000&host=" + host + "&clsId=" + clsid + "&username=" + user + "&password=" + password + "&domain=" + domain;
 
                 from(uriString).to("log:OPCTest?level=info").to("mock:result");
             }

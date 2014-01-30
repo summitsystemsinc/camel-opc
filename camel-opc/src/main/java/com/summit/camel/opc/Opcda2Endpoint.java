@@ -19,8 +19,6 @@ package com.summit.camel.opc;
  * limitations under the License.
  * #L%
  */
-
-
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.Map;
@@ -64,7 +62,7 @@ public class Opcda2Endpoint extends DefaultEndpoint {
     private boolean diffOnly = false;
     private boolean valuesOnly = true;
     private final Map<String, Item> opcItems = new TreeMap<String, Item>();
-    
+
     private boolean forceHardwareRead = false;
 
     public Opcda2Endpoint() {
@@ -180,10 +178,10 @@ public class Opcda2Endpoint extends DefaultEndpoint {
             connInfo.setUser(getUsername());
             connInfo.setPassword(getPassword());
 
-            ScheduledExecutorService execService =
-                    Executors.newScheduledThreadPool(
-                    getPoolSize(),
-                    new Opcda2EndpointThreadFactory());
+            ScheduledExecutorService execService
+                    = Executors.newScheduledThreadPool(
+                            getPoolSize(),
+                            new Opcda2EndpointThreadFactory());
 
             opcServer = new Server(connInfo, execService);
 
@@ -212,10 +210,12 @@ public class Opcda2Endpoint extends DefaultEndpoint {
                 Branch root = treeBrowser.browse();
                 Branch parent = root;
 
+                Leaf leaf = null;
+
                 for (int i = 0; i < pathArray.length; i++) {
                     boolean found = false;
                     //This should handle "//" and the first /
-                    if(pathArray[i].isEmpty()){
+                    if (pathArray[i].isEmpty()) {
                         continue;
                     }
                     for (Branch candidate : parent.getBranches()) {
@@ -225,11 +225,27 @@ public class Opcda2Endpoint extends DefaultEndpoint {
                             break;
                         }
                     }
+                    //If we are on the last item, and its still not found, 
+                    //check to see if it is a tag (leaf)
+                    if (!found && i == pathArray.length - 1) {
+                        for (Leaf l : parent.getLeaves()) {
+                            if (l.getName().equals(pathArray[i])) {
+                                leaf = l;
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+
                     if (!found) {
                         throw new OPCConnectionException("Unable to find sub-group: " + pathArray[i]);
                     }
                 }
-                populateItemsMapRecursive(parent);
+                if (leaf != null) {
+                    registerLeaf(leaf);
+                } else {
+                    populateItemsMapRecursive(parent);
+                }
             } catch (Exception ex) {
                 throw new OPCConnectionException(ex.getMessage(), ex);
             }
@@ -238,13 +254,17 @@ public class Opcda2Endpoint extends DefaultEndpoint {
 
     public void populateItemsMapRecursive(Branch parent) throws JIException, AddFailedException {
         for (Leaf l : parent.getLeaves()) {
-            String itemId = l.getItemId();
-            Item i = opcGroup.addItem(itemId);
-            opcItems.put(itemId, i);
+            registerLeaf(l);
         }
-        for(Branch child : parent.getBranches()){
+        for (Branch child : parent.getBranches()) {
             populateItemsMapRecursive(child);
         }
+    }
+
+    private void registerLeaf(Leaf l) throws JIException, AddFailedException {
+        String itemId = l.getItemId();
+        Item i = opcGroup.addItem(itemId);
+        opcItems.put(itemId, i);
     }
 
     /**
