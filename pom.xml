@@ -59,7 +59,7 @@
                 <configuration>
                     <licenseName>apache_v2</licenseName>
                     <organizationName>Summit Management Systems, Inc.</organizationName>
-                    <inceptionYear>2013</inceptionYear>
+                    <inceptionYear>2012</inceptionYear>
                 </configuration>
             </plugin>
         </plugins>
@@ -67,6 +67,7 @@
     <properties>
         <camel.version>2.12.0</camel.version>
         <netbeans.hint.license>apache20</netbeans.hint.license>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <modules>
         <module>camel-opc</module>
