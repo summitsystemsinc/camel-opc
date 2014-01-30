@@ -104,9 +104,9 @@ public class JIVariantMarshaller {
         switch (type ^ JIVariant.VT_ARRAY) {
             //JInterop seems to be handling most of these to java types already...
             case JIVariant.VT_I1:
-            case JIVariant.VT_I2:
-            case JIVariant.VT_I4:
-            case JIVariant.VT_I8:
+            case JIVariant.VT_I2:                
+            case JIVariant.VT_I4:                
+            case JIVariant.VT_I8:                
             case JIVariant.VT_INT:
             case JIVariant.VT_DATE:
             case JIVariant.VT_R4:
@@ -115,6 +115,8 @@ public class JIVariantMarshaller {
             case JIVariant.VT_UI2:
             case JIVariant.VT_UI4:
             case JIVariant.VT_UINT:
+            case JIVariant.VT_BOOL:
+                return objArray;
             case JIVariant.VT_CY:
                 BigDecimal[] cyRetVal = new BigDecimal[arrayLength];
                 for (int i = 0; i < arrayLength; i++) {
@@ -127,13 +129,9 @@ public class JIVariantMarshaller {
                     strRetVal[i] = ((JIString) objArray[i]).getString();
                 }
                 return strRetVal;
-            case JIVariant.VT_BOOL:
             default:
-                logger.warn(String.format(DEFAULT_MSG, jIArray, jIArray.getArrayClass().getName(), Integer.toHexString(type)
-                ));
-
+                logger.warn(String.format(DEFAULT_MSG, jIArray, jIArray.getArrayClass().getName(), Integer.toHexString(type)));
+                return objArray;
         }
-
-        return objArray;
     }
 }
