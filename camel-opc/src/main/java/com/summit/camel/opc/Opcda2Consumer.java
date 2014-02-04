@@ -19,10 +19,8 @@ package com.summit.camel.opc;
  * limitations under the License.
  * #L%
  */
-
-
 import java.net.UnknownHostException;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -40,9 +38,6 @@ import org.openscada.opc.lib.da.ItemState;
 public class Opcda2Consumer extends ScheduledPollConsumer {
 
     private final Opcda2Endpoint endpoint;
-    private boolean forceHardwareRead;
-    private boolean diffOnly;
-    private boolean valuesOnly;
     Map<String, Map<String, Object>> previousData = new HashMap<String, Map<String, Object>>();
 
     public Opcda2Consumer(Opcda2Endpoint endpoint, Processor processor) throws IllegalArgumentException, UnknownHostException, JIException, AlreadyConnectedException {
@@ -50,9 +45,6 @@ public class Opcda2Consumer extends ScheduledPollConsumer {
 
         super.setDelay(endpoint.getDelay());
         this.endpoint = endpoint;
-        diffOnly = endpoint.isDiffOnly();
-        valuesOnly = endpoint.isValuesOnly();
-        forceHardwareRead = endpoint.isForceHardwareRead();
     }
 
     @Override
@@ -60,21 +52,36 @@ public class Opcda2Consumer extends ScheduledPollConsumer {
         Exchange exchange = endpoint.createExchange();
 
         Map<String, Map<String, Object>> data = new TreeMap<String, Map<String, Object>>();
+        final Map<String, Item> opcItems = endpoint.getOpcItems();
 
-        for (String key : endpoint.getOpcItemIds()) {
-            Item item = endpoint.getOpcItem(key);
+        for (String key : opcItems.keySet()) {
+            Item item = opcItems.get(key);
             //TODO this is not serializable... we'll need our own source for this. Dumb.
-            ItemState is = item.read(isForceHardwareRead());
+            ItemState is = item.read(endpoint.isForceHardwareRead());
             final Map<String, Object> itemStateAsMap = getItemStateAsMap(is);
+            final boolean diffOnly = endpoint.isDiffOnly();
 
             if (diffOnly) {
                 Map<String, Object> previousItem = previousData.get(key);
                 if (previousItem == null) {
                     data.put(key, itemStateAsMap);
                     previousData.put(key, itemStateAsMap);
-                } else if (!itemStateAsMap.get("value").equals(previousItem.get("value"))) {
-                    data.put(key, itemStateAsMap);
-                    previousData.put(key, itemStateAsMap);
+                } else {
+                    final Object newValue = itemStateAsMap.get("value");
+                    final Object oldValue = previousItem.get("value");
+                    boolean diff = false;
+
+                    if (newValue instanceof Object[] && oldValue instanceof Object[]) {
+                        if (!Arrays.equals((Object[]) newValue, (Object[]) oldValue)) {
+                            diff = true;
+                        }
+                    } else if (!newValue.equals(oldValue)) {
+                        diff = true;
+                    }
+                    if (diff) {
+                        data.put(key, itemStateAsMap);
+                        previousData.put(key, itemStateAsMap);
+                    }
                 }
             } else if (!diffOnly) {
                 data.put(key, itemStateAsMap);
@@ -86,8 +93,12 @@ public class Opcda2Consumer extends ScheduledPollConsumer {
 
         try {
             // send message to next processor in the route
-            getProcessor().process(exchange);
-            return 1; // number of messages polled
+            if (!data.isEmpty()) {
+                getProcessor().process(exchange);
+                return 1; // number of messages polled
+            } else {
+                return 0;
+            }
         } finally {
             // log exception if an exception occurred and was not handled
             if (exchange.getException() != null) {
@@ -98,7 +109,7 @@ public class Opcda2Consumer extends ScheduledPollConsumer {
 
     private Map<String, Object> getItemStateAsMap(ItemState is) throws JIException {
         Map<String, Object> retVal = new TreeMap<String, Object>();
-        if (!isValuesOnly()) {
+        if (!endpoint.isValuesOnly()) {
             retVal.put("errorCode", Integer.valueOf(is.getErrorCode()));
             retVal.put("quality", Short.valueOf(is.getQuality()));
             retVal.put("timestamp", is.getTimestamp());
@@ -106,26 +117,5 @@ public class Opcda2Consumer extends ScheduledPollConsumer {
         retVal.put("value", JIVariantMarshaller.toJavaType(is.getValue()));
 
         return retVal;
-    }
-
-    /**
-     * @return the forceHardwareRead
-     */
-    public boolean isForceHardwareRead() {
-        return forceHardwareRead;
-    }
-
-    /**
-     * @return the valuesOnly
-     */
-    public boolean isValuesOnly() {
-        return valuesOnly;
-    }
-
-    /**
-     * @param valuesOnly the valuesOnly to set
-     */
-    public void setValuesOnly(boolean valuesOnly) {
-        this.valuesOnly = valuesOnly;
     }
 }

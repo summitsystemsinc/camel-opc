@@ -20,7 +20,8 @@ package com.summit.camel.opc;
  * #L%
  */
 import java.net.UnknownHostException;
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Executors;
@@ -30,6 +31,7 @@ import org.apache.camel.Consumer;
 import org.apache.camel.EndpointConfiguration;
 import org.apache.camel.Processor;
 import org.apache.camel.Producer;
+import org.apache.camel.RuntimeCamelException;
 import org.apache.camel.impl.DefaultEndpoint;
 import org.jinterop.dcom.common.JIException;
 import org.openscada.opc.lib.common.AlreadyConnectedException;
@@ -61,6 +63,8 @@ public class Opcda2Endpoint extends DefaultEndpoint {
     private Group opcGroup;
     private boolean diffOnly = false;
     private boolean valuesOnly = true;
+    private String stripPrefix = "";
+
     private final Map<String, Item> opcItems = new TreeMap<String, Item>();
 
     private boolean forceHardwareRead = false;
@@ -166,7 +170,7 @@ public class Opcda2Endpoint extends DefaultEndpoint {
         if (getOpcServer() == null) {
 
             if (getClsId() == null && getProgId() == null) {
-                throw new OPCConnectionException("clsId OR progId MUST BE SET!");
+                throw new OPCConnectionException(NO_CLSID_MSG);
             }
 
             ConnectionInformation connInfo = new ConnectionInformation();
@@ -202,55 +206,80 @@ public class Opcda2Endpoint extends DefaultEndpoint {
             } catch (DuplicateGroupException ex) {
                 throw new OPCConnectionException(ex.getMessage(), ex);
             }
-            EndpointConfiguration cfg = getEndpointConfiguration();
-            String opcTreePath = cfg.getParameter("path");
-            String[] pathArray = opcTreePath.split("/");
-            try {
-                TreeBrowser treeBrowser = opcServer.getTreeBrowser();
-                Branch root = treeBrowser.browse();
-                Branch parent = root;
+            registerTags();
+        }
+    }
+    public static final String NO_CLSID_MSG = "clsId OR progId MUST BE SET!";
 
-                Leaf leaf = null;
+    private void registerTags() throws RuntimeCamelException, OPCConnectionException {
+        EndpointConfiguration cfg = getEndpointConfiguration();
+        String opcTreePath = cfg.getParameter("path");
+        String[] pathArray = opcTreePath.split("/");
+        try {
+            TreeBrowser treeBrowser = opcServer.getTreeBrowser();
+            Branch root = treeBrowser.browse();
+            Branch parent = root;
 
-                for (int i = 0; i < pathArray.length; i++) {
-                    boolean found = false;
-                    //This should handle "//" and the first /
-                    if (pathArray[i].isEmpty()) {
-                        continue;
+            Leaf leaf = null;
+
+            for (int i = 0; i < pathArray.length; i++) {
+                boolean found = false;
+                //This should handle "//" and the first /
+                if (pathArray[i].isEmpty()) {
+                    continue;
+                }
+                for (Branch candidate : parent.getBranches()) {
+                    if (candidate.getName().equals(pathArray[i])) {
+                        parent = candidate;
+                        found = true;
+                        break;
                     }
-                    for (Branch candidate : parent.getBranches()) {
-                        if (candidate.getName().equals(pathArray[i])) {
-                            parent = candidate;
+                }
+                //If we are on the last item, and its still not found,
+                //check to see if it is a tag (leaf)
+                if (!found && i == pathArray.length - 1) {
+                    for (Leaf l : parent.getLeaves()) {
+                        if (l.getName().equals(pathArray[i])) {
+                            leaf = l;
                             found = true;
                             break;
                         }
                     }
-                    //If we are on the last item, and its still not found, 
-                    //check to see if it is a tag (leaf)
-                    if (!found && i == pathArray.length - 1) {
-                        for (Leaf l : parent.getLeaves()) {
-                            if (l.getName().equals(pathArray[i])) {
-                                leaf = l;
-                                found = true;
-                                break;
-                            }
-                        }
+                }
+
+                if (!found) {
+                    ArrayList<String> possibleBranches = new ArrayList<String>();
+                    StringBuilder possibleMatches = new StringBuilder();
+                    for (Branch b : parent.getBranches()) {
+                        possibleBranches.add(String.format("%n[B] %s", b.getName()));
+                    }
+                    Collections.sort(possibleBranches, String.CASE_INSENSITIVE_ORDER);
+                    ArrayList<String> possibleLeaves = new ArrayList<String>();
+                    for (Leaf l : parent.getLeaves()) {
+                        possibleLeaves.add(String.format("%n[T] %s", l.getName()));
+                    }
+                    Collections.sort(possibleLeaves, String.CASE_INSENSITIVE_ORDER);
+
+                    for (String s : possibleBranches) {
+                        possibleMatches.append(s);
+                    }
+                    for (String s : possibleLeaves) {
+                        possibleMatches.append(s);
                     }
 
-                    if (!found) {
-                        throw new OPCConnectionException("Unable to find sub-group: " + pathArray[i]);
-                    }
+                    throw new OPCConnectionException(String.format(NO_SUBGROUP_MSG, pathArray[i], possibleMatches.toString()));
                 }
-                if (leaf != null) {
-                    registerLeaf(leaf);
-                } else {
-                    populateItemsMapRecursive(parent);
-                }
-            } catch (Exception ex) {
-                throw new OPCConnectionException(ex.getMessage(), ex);
             }
+            if (leaf != null) {
+                registerLeaf(leaf);
+            } else {
+                populateItemsMapRecursive(parent);
+            }
+        } catch (Exception ex) {
+            throw new OPCConnectionException(ex.getMessage(), ex);
         }
     }
+    public static final String NO_SUBGROUP_MSG = "Unable to find sub-group: %s %nPossible Matches:%s";
 
     public void populateItemsMapRecursive(Branch parent) throws JIException, AddFailedException {
         for (Leaf l : parent.getLeaves()) {
@@ -264,7 +293,7 @@ public class Opcda2Endpoint extends DefaultEndpoint {
     private void registerLeaf(Leaf l) throws JIException, AddFailedException {
         String itemId = l.getItemId();
         Item i = opcGroup.addItem(itemId);
-        opcItems.put(itemId, i);
+        getOpcItems().put(itemId, i);
     }
 
     /**
@@ -365,6 +394,27 @@ public class Opcda2Endpoint extends DefaultEndpoint {
         this.valuesOnly = valuesOnly;
     }
 
+    /**
+     * @return the stripPrefix
+     */
+    public String getStripPrefix() {
+        return stripPrefix;
+    }
+
+    /**
+     * @param stripPrefix the stripPrefix to set
+     */
+    public void setStripPrefix(String stripPrefix) {
+        this.stripPrefix = stripPrefix;
+    }
+
+    /**
+     * @return the opcItems
+     */
+    public Map<String, Item> getOpcItems() {
+        return opcItems;
+    }
+
     private final class Opcda2EndpointThreadFactory implements ThreadFactory {
 
         int count = 0;
@@ -374,17 +424,5 @@ public class Opcda2Endpoint extends DefaultEndpoint {
             Thread t = new Thread(r, Opcda2Endpoint.this.getId() + "_" + count);
             return t;
         }
-    }
-
-    public Collection<String> getOpcItemIds() {
-        return opcItems.keySet();
-    }
-
-    public Collection<Item> getOpcItems() {
-        return opcItems.values();
-    }
-
-    public Item getOpcItem(String itemId) {
-        return opcItems.get(itemId);
     }
 }
