@@ -209,6 +209,16 @@ public class Opcda2Endpoint extends DefaultEndpoint {
             registerTags();
         }
     }
+
+    @Override
+    protected void doShutdown() throws Exception {
+        if (opcServer != null) {
+            opcServer.disconnect();
+            opcServer = null;
+        }
+        super.doShutdown();
+    }
+
     public static final String NO_CLSID_MSG = "clsId OR progId MUST BE SET!";
 
     private void registerTags() throws RuntimeCamelException, OPCConnectionException {
