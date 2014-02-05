@@ -32,6 +32,11 @@ import org.openscada.opc.lib.common.AlreadyConnectedException;
 import org.openscada.opc.lib.da.Item;
 import org.openscada.opc.lib.da.ItemState;
 
+import static com.summit.camel.opc.Opcda2Endpoint.VALUE;
+import static com.summit.camel.opc.Opcda2Endpoint.TIMESTAMP;
+import static com.summit.camel.opc.Opcda2Endpoint.QUALITY;
+import static com.summit.camel.opc.Opcda2Endpoint.ERROR_CODE;
+
 /**
  * The opcda2 consumer.
  */
@@ -110,11 +115,11 @@ public class Opcda2Consumer extends ScheduledPollConsumer {
     private Map<String, Object> getItemStateAsMap(ItemState is) throws JIException {
         Map<String, Object> retVal = new TreeMap<String, Object>();
         if (!endpoint.isValuesOnly()) {
-            retVal.put("errorCode", Integer.valueOf(is.getErrorCode()));
-            retVal.put("quality", Short.valueOf(is.getQuality()));
-            retVal.put("timestamp", is.getTimestamp());
+            retVal.put(ERROR_CODE, Integer.valueOf(is.getErrorCode()));
+            retVal.put(QUALITY, Short.valueOf(is.getQuality()));
+            retVal.put(TIMESTAMP, is.getTimestamp());
         }
-        retVal.put("value", JIVariantMarshaller.toJavaType(is.getValue()));
+        retVal.put(VALUE, JIVariantMarshaller.toJavaType(is.getValue()));
 
         return retVal;
     }

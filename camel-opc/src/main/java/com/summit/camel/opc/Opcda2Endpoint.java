@@ -63,7 +63,12 @@ public class Opcda2Endpoint extends DefaultEndpoint {
     private Group opcGroup;
     private boolean diffOnly = false;
     private boolean valuesOnly = true;
-    private String stripPrefix = "";
+    private boolean failIfTagAbsent = true;
+    
+    public static final String ERROR_CODE = "errorCode";
+    public static final String QUALITY = "quality";
+    public static final String TIMESTAMP = "timestamp";
+    public static final String VALUE = "value";
 
     private final Map<String, Item> opcItems = new TreeMap<String, Item>();
 
@@ -405,24 +410,24 @@ public class Opcda2Endpoint extends DefaultEndpoint {
     }
 
     /**
-     * @return the stripPrefix
-     */
-    public String getStripPrefix() {
-        return stripPrefix;
-    }
-
-    /**
-     * @param stripPrefix the stripPrefix to set
-     */
-    public void setStripPrefix(String stripPrefix) {
-        this.stripPrefix = stripPrefix;
-    }
-
-    /**
      * @return the opcItems
      */
     public Map<String, Item> getOpcItems() {
         return opcItems;
+    }
+
+    /**
+     * @return the failIfTagAbsent
+     */
+    public boolean isFailIfTagAbsent() {
+        return failIfTagAbsent;
+    }
+
+    /**
+     * @param failIfTagAbsent the failIfTagAbsent to set
+     */
+    public void setFailIfTagAbsent(boolean failIfTagAbsent) {
+        this.failIfTagAbsent = failIfTagAbsent;
     }
 
     private final class Opcda2EndpointThreadFactory implements ThreadFactory {
