@@ -104,11 +104,15 @@ public class Opcda2Producer extends DefaultProducer {
                     writeValue = new JIVariant((Long) value);
                     //TODO Array's, Currency
                 } else if (value instanceof Object[]) {
+                    final String msg = String.format("Arrays not currently supported <- %s", tagName);
                     /*
                      System.out.println(tagName);
                      writeValue = new JIVariant(new JIArray(value));
                      */
-                    log.info("Arrays not currently supported.");
+                    log.info(msg);
+                    if (endpoint.isFailIfTagAbsent()) {
+                        throw new CamelOpcException(msg);
+                    }
                     writeValue = new JIVariant(JIVariant.NULL());
                 } else {
                     throw new CamelOpcException(String.format("Data Type not supported: %s", value.getClass()));
