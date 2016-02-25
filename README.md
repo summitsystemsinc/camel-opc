@@ -9,4 +9,4 @@ Camel Component for OPC-DA
 Example usage (Groovy)
 ----------------------
 
-[Groovy Gist](https://gist.github.com/magno32/8701890.js)
+[Groovy Gist](https://gist.github.com/magno32/8701890)
