@@ -1,0 +1,9 @@
+## Travis-CI Config
+language: java
+branches:
+  except:
+    - gh-pages
+jdk:
+    - oraclejdk8
+    - oraclejdk7
+    - openjdk7
