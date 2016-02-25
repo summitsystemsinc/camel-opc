@@ -24,11 +24,10 @@
 
     <parent>
         <artifactId>camel-opc-parent</artifactId>
-        <groupId>com.summit.camel.opc</groupId>
+        <groupId>com.summitsystemsinc.camel.opc</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.summit.camel.opc</groupId>
     <artifactId>camel-opc_da2</artifactId>
     <packaging>bundle</packaging>
     <name>Camel-OPC :: OPCDA 2 Component</name>
