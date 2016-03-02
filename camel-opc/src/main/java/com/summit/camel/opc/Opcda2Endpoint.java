@@ -48,6 +48,8 @@ import org.openscada.opc.lib.da.browser.TreeBrowser;
 
 /**
  * Represents a opcda2 endpoint.
+ * 
+ * @author <a href="mailto:justin.smith@summitsystemsinc.com">Justin Smith</a>
  */
 public class Opcda2Endpoint extends DefaultEndpoint {
 

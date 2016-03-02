@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  *
- * @author Justin Smith <justin.smith@summitsystemsinc.com>
+ * @author <a href="mailto:justin.smith@summitsystemsinc.com">Justin Smith</a>
  */
 public class JIVariantMarshaller {
 

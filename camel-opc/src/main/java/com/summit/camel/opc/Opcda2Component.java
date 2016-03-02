@@ -25,7 +25,9 @@ import org.apache.camel.Endpoint;
 import org.apache.camel.impl.DefaultComponent;
 
 /**
- * Represents the component that manages {@link opcda2Endpoint}.
+ * Represents the component that manages {@link Opcda2Endpoint}.
+ * 
+ * @author <a href="mailto:justin.smith@summitsystemsinc.com">Justin Smith</a>
  */
 public class Opcda2Component extends DefaultComponent {
     

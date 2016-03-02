@@ -18,7 +18,7 @@ package com.summit.camel.opc;
 
 /**
  *
- * @author justin
+ * @author <a href="mailto:justin.smith@summitsystemsinc.com">Justin Smith</a>
  */
 public class CamelOpcException extends Exception {
 

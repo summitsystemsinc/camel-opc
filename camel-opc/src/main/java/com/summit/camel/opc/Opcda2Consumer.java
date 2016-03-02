@@ -39,6 +39,8 @@ import static com.summit.camel.opc.Opcda2Endpoint.ERROR_CODE;
 
 /**
  * The opcda2 consumer.
+ * 
+ * @author <a href="mailto:justin.smith@summitsystemsinc.com">Justin Smith</a>
  */
 public class Opcda2Consumer extends ScheduledPollConsumer {
 
