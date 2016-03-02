@@ -19,26 +19,24 @@ package com.summit.camel.opc;
  * limitations under the License.
  * #L%
  */
-
-
 /**
  *
  * @author <a href="mailto:justin.smith@summitsystemsinc.com">Justin Smith</a>
  */
 public class OPCConnectionException extends Exception {
 
-    public OPCConnectionException(String message, Throwable cause) {
-        super(message, cause);
-    }
+	public OPCConnectionException(String message, Throwable cause) {
+		super(message, cause);
+	}
 
-    public OPCConnectionException(String message) {
-        super(message);
-    }
+	public OPCConnectionException(String message) {
+		super(message);
+	}
 
-    public OPCConnectionException() {
-    }
+	public OPCConnectionException() {
+	}
 
-    public OPCConnectionException(Throwable cause) {
-        super(cause);
-    }
+	public OPCConnectionException(Throwable cause) {
+		super(cause);
+	}
 }

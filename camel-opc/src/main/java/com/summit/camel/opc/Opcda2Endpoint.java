@@ -48,398 +48,398 @@ import org.openscada.opc.lib.da.browser.TreeBrowser;
 
 /**
  * Represents a opcda2 endpoint.
- * 
+ *
  * @author <a href="mailto:justin.smith@summitsystemsinc.com">Justin Smith</a>
  */
 public class Opcda2Endpoint extends DefaultEndpoint {
 
-    private String domain = "localhost";
-    private String host = "localhost";
-    private String clsId;
-    private String progId;
-    private String username;
-    private String password;
-    private int poolSize = 2;
-    private int delay = 500;
-    private Server opcServer;
-    private Group opcGroup;
-    private boolean diffOnly = false;
-    private boolean valuesOnly = true;
-    private boolean failIfTagAbsent = true;
-    
-    public static final String ERROR_CODE = "errorCode";
-    public static final String QUALITY = "quality";
-    public static final String TIMESTAMP = "timestamp";
-    public static final String VALUE = "value";
+	private String domain = "localhost";
+	private String host = "localhost";
+	private String clsId;
+	private String progId;
+	private String username;
+	private String password;
+	private int poolSize = 2;
+	private int delay = 500;
+	private Server opcServer;
+	private Group opcGroup;
+	private boolean diffOnly = false;
+	private boolean valuesOnly = true;
+	private boolean failIfTagAbsent = true;
 
-    private final Map<String, Item> opcItems = new TreeMap<String, Item>();
+	public static final String ERROR_CODE = "errorCode";
+	public static final String QUALITY = "quality";
+	public static final String TIMESTAMP = "timestamp";
+	public static final String VALUE = "value";
 
-    private boolean forceHardwareRead = false;
+	private final Map<String, Item> opcItems = new TreeMap<String, Item>();
 
-    public Opcda2Endpoint() {
-    }
+	private boolean forceHardwareRead = false;
 
-    public Opcda2Endpoint(String uri, Opcda2Component component) {
-        super(uri, component);
-    }
+	public Opcda2Endpoint() {
+	}
 
-    public Opcda2Endpoint(String endpointUri) {
-        super(endpointUri);
-    }
+	public Opcda2Endpoint(String uri, Opcda2Component component) {
+		super(uri, component);
+	}
 
-    @Override
-    public Producer createProducer() throws Exception {
-        initializeServerConnection();
-        return new Opcda2Producer(this);
-    }
+	public Opcda2Endpoint(String endpointUri) {
+		super(endpointUri);
+	}
 
-    @Override
-    public Consumer createConsumer(Processor processor) throws Exception {
-        initializeServerConnection();
-        Opcda2Consumer retVal = new Opcda2Consumer(this, processor);
-        return retVal;
-    }
+	@Override
+	public Producer createProducer() throws Exception {
+		initializeServerConnection();
+		return new Opcda2Producer(this);
+	}
 
-    @Override
-    public boolean isSingleton() {
-        return true;
-    }
+	@Override
+	public Consumer createConsumer(Processor processor) throws Exception {
+		initializeServerConnection();
+		Opcda2Consumer retVal = new Opcda2Consumer(this, processor);
+		return retVal;
+	}
 
-    /**
-     * @return the domain
-     */
-    public String getDomain() {
-        return domain;
-    }
+	@Override
+	public boolean isSingleton() {
+		return true;
+	}
 
-    /**
-     * @param domain the domain to set
-     */
-    public void setDomain(String domain) {
-        this.domain = domain;
-    }
+	/**
+	 * @return the domain
+	 */
+	public String getDomain() {
+		return domain;
+	}
 
-    /**
-     * @return the username
-     */
-    public String getUsername() {
-        return username;
-    }
+	/**
+	 * @param domain the domain to set
+	 */
+	public void setDomain(String domain) {
+		this.domain = domain;
+	}
 
-    /**
-     * @param username the username to set
-     */
-    public void setUsername(String username) {
-        this.username = username;
-    }
+	/**
+	 * @return the username
+	 */
+	public String getUsername() {
+		return username;
+	}
 
-    /**
-     * @return the password
-     */
-    public String getPassword() {
-        return password;
-    }
+	/**
+	 * @param username the username to set
+	 */
+	public void setUsername(String username) {
+		this.username = username;
+	}
 
-    /**
-     * @param password the password to set
-     */
-    public void setPassword(String password) {
-        this.password = password;
-    }
+	/**
+	 * @return the password
+	 */
+	public String getPassword() {
+		return password;
+	}
 
-    /**
-     * @return the host
-     */
-    public String getHost() {
-        return host;
-    }
+	/**
+	 * @param password the password to set
+	 */
+	public void setPassword(String password) {
+		this.password = password;
+	}
 
-    /**
-     * @param host the host to set
-     */
-    public void setHost(String host) {
-        this.host = host;
-    }
+	/**
+	 * @return the host
+	 */
+	public String getHost() {
+		return host;
+	}
 
-    protected Server getOpcServer() {
-        return opcServer;
-    }
+	/**
+	 * @param host the host to set
+	 */
+	public void setHost(String host) {
+		this.host = host;
+	}
 
-    /**
-     *
-     * @return A connection to this endpoints opc server.
-     * @throws IllegalArgumentException
-     * @throws UnknownHostException
-     * @throws JIException
-     * @throws AlreadyConnectedException
-     */
-    private void initializeServerConnection() throws OPCConnectionException {
-        if (getOpcServer() == null) {
+	protected Server getOpcServer() {
+		return opcServer;
+	}
 
-            if (getClsId() == null && getProgId() == null) {
-                throw new OPCConnectionException(NO_CLSID_MSG);
-            }
+	/**
+	 *
+	 * @return A connection to this endpoints opc server.
+	 * @throws IllegalArgumentException
+	 * @throws UnknownHostException
+	 * @throws JIException
+	 * @throws AlreadyConnectedException
+	 */
+	private void initializeServerConnection() throws OPCConnectionException {
+		if (getOpcServer() == null) {
 
-            ConnectionInformation connInfo = new ConnectionInformation();
+			if (getClsId() == null && getProgId() == null) {
+				throw new OPCConnectionException(NO_CLSID_MSG);
+			}
 
-            connInfo.setClsid(getClsId());
-            connInfo.setProgId(getProgId());
-            connInfo.setHost(getHost());
-            connInfo.setDomain(getDomain());
-            connInfo.setUser(getUsername());
-            connInfo.setPassword(getPassword());
+			ConnectionInformation connInfo = new ConnectionInformation();
 
-            ScheduledExecutorService execService
-                    = Executors.newScheduledThreadPool(
-                            getPoolSize(),
-                            new Opcda2EndpointThreadFactory());
+			connInfo.setClsid(getClsId());
+			connInfo.setProgId(getProgId());
+			connInfo.setHost(getHost());
+			connInfo.setDomain(getDomain());
+			connInfo.setUser(getUsername());
+			connInfo.setPassword(getPassword());
 
-            opcServer = new Server(connInfo, execService);
+			ScheduledExecutorService execService
+					= Executors.newScheduledThreadPool(
+							getPoolSize(),
+							new Opcda2EndpointThreadFactory());
 
-            try {
-                opcServer.connect();
+			opcServer = new Server(connInfo, execService);
 
-                opcGroup = opcServer.addGroup(getId());
-            } catch (IllegalArgumentException ex) {
-                throw new OPCConnectionException(ex.getMessage(), ex);
-            } catch (UnknownHostException ex) {
-                throw new OPCConnectionException(ex.getMessage(), ex);
-            } catch (JIException ex) {
-                throw new OPCConnectionException(ex.getMessage(), ex);
-            } catch (AlreadyConnectedException ex) {
-                throw new OPCConnectionException(ex.getMessage(), ex);
-            } catch (NotConnectedException ex) {
-                throw new OPCConnectionException(ex.getMessage(), ex);
-            } catch (DuplicateGroupException ex) {
-                throw new OPCConnectionException(ex.getMessage(), ex);
-            }
-            registerTags();
-        }
-    }
+			try {
+				opcServer.connect();
 
-    @Override
-    protected void doShutdown() throws Exception {
-        if (opcServer != null) {
-            opcServer.disconnect();
-            opcServer = null;
-        }
-        super.doShutdown();
-    }
+				opcGroup = opcServer.addGroup(getId());
+			} catch (IllegalArgumentException ex) {
+				throw new OPCConnectionException(ex.getMessage(), ex);
+			} catch (UnknownHostException ex) {
+				throw new OPCConnectionException(ex.getMessage(), ex);
+			} catch (JIException ex) {
+				throw new OPCConnectionException(ex.getMessage(), ex);
+			} catch (AlreadyConnectedException ex) {
+				throw new OPCConnectionException(ex.getMessage(), ex);
+			} catch (NotConnectedException ex) {
+				throw new OPCConnectionException(ex.getMessage(), ex);
+			} catch (DuplicateGroupException ex) {
+				throw new OPCConnectionException(ex.getMessage(), ex);
+			}
+			registerTags();
+		}
+	}
 
-    public static final String NO_CLSID_MSG = "clsId OR progId MUST BE SET!";
+	@Override
+	protected void doShutdown() throws Exception {
+		if (opcServer != null) {
+			opcServer.disconnect();
+			opcServer = null;
+		}
+		super.doShutdown();
+	}
 
-    private void registerTags() throws RuntimeCamelException, OPCConnectionException {
-        EndpointConfiguration cfg = getEndpointConfiguration();
-        String opcTreePath = cfg.getParameter("path");
-        String[] pathArray = opcTreePath.split("/");
-        try {
-            TreeBrowser treeBrowser = opcServer.getTreeBrowser();
-            Branch root = treeBrowser.browse();
-            Branch parent = root;
+	public static final String NO_CLSID_MSG = "clsId OR progId MUST BE SET!";
 
-            Leaf leaf = null;
+	private void registerTags() throws RuntimeCamelException, OPCConnectionException {
+		EndpointConfiguration cfg = getEndpointConfiguration();
+		String opcTreePath = cfg.getParameter("path");
+		String[] pathArray = opcTreePath.split("/");
+		try {
+			TreeBrowser treeBrowser = opcServer.getTreeBrowser();
+			Branch root = treeBrowser.browse();
+			Branch parent = root;
 
-            for (int i = 0; i < pathArray.length; i++) {
-                boolean found = false;
-                //This should handle "//" and the first /
-                if (pathArray[i].isEmpty()) {
-                    continue;
-                }
-                for (Branch candidate : parent.getBranches()) {
-                    if (candidate.getName().equals(pathArray[i])) {
-                        parent = candidate;
-                        found = true;
-                        break;
-                    }
-                }
-                //If we are on the last item, and its still not found,
-                //check to see if it is a tag (leaf)
-                if (!found && i == pathArray.length - 1) {
-                    for (Leaf l : parent.getLeaves()) {
-                        if (l.getName().equals(pathArray[i])) {
-                            leaf = l;
-                            found = true;
-                            break;
-                        }
-                    }
-                }
+			Leaf leaf = null;
 
-                if (!found) {
-                    ArrayList<String> possibleBranches = new ArrayList<String>();
-                    StringBuilder possibleMatches = new StringBuilder();
-                    for (Branch b : parent.getBranches()) {
-                        possibleBranches.add(String.format("%n[B] %s", b.getName()));
-                    }
-                    Collections.sort(possibleBranches, String.CASE_INSENSITIVE_ORDER);
-                    ArrayList<String> possibleLeaves = new ArrayList<String>();
-                    for (Leaf l : parent.getLeaves()) {
-                        possibleLeaves.add(String.format("%n[T] %s", l.getName()));
-                    }
-                    Collections.sort(possibleLeaves, String.CASE_INSENSITIVE_ORDER);
+			for (int i = 0; i < pathArray.length; i++) {
+				boolean found = false;
+				//This should handle "//" and the first /
+				if (pathArray[i].isEmpty()) {
+					continue;
+				}
+				for (Branch candidate : parent.getBranches()) {
+					if (candidate.getName().equals(pathArray[i])) {
+						parent = candidate;
+						found = true;
+						break;
+					}
+				}
+				//If we are on the last item, and its still not found,
+				//check to see if it is a tag (leaf)
+				if (!found && i == pathArray.length - 1) {
+					for (Leaf l : parent.getLeaves()) {
+						if (l.getName().equals(pathArray[i])) {
+							leaf = l;
+							found = true;
+							break;
+						}
+					}
+				}
 
-                    for (String s : possibleBranches) {
-                        possibleMatches.append(s);
-                    }
-                    for (String s : possibleLeaves) {
-                        possibleMatches.append(s);
-                    }
+				if (!found) {
+					ArrayList<String> possibleBranches = new ArrayList<String>();
+					StringBuilder possibleMatches = new StringBuilder();
+					for (Branch b : parent.getBranches()) {
+						possibleBranches.add(String.format("%n[B] %s", b.getName()));
+					}
+					Collections.sort(possibleBranches, String.CASE_INSENSITIVE_ORDER);
+					ArrayList<String> possibleLeaves = new ArrayList<String>();
+					for (Leaf l : parent.getLeaves()) {
+						possibleLeaves.add(String.format("%n[T] %s", l.getName()));
+					}
+					Collections.sort(possibleLeaves, String.CASE_INSENSITIVE_ORDER);
 
-                    throw new OPCConnectionException(String.format(NO_SUBGROUP_MSG, pathArray[i], possibleMatches.toString()));
-                }
-            }
-            if (leaf != null) {
-                registerLeaf(leaf);
-            } else {
-                populateItemsMapRecursive(parent);
-            }
-        } catch (Exception ex) {
-            throw new OPCConnectionException(ex.getMessage(), ex);
-        }
-    }
-    public static final String NO_SUBGROUP_MSG = "Unable to find sub-group: %s %nPossible Matches:%s";
+					for (String s : possibleBranches) {
+						possibleMatches.append(s);
+					}
+					for (String s : possibleLeaves) {
+						possibleMatches.append(s);
+					}
 
-    public void populateItemsMapRecursive(Branch parent) throws JIException, AddFailedException {
-        for (Leaf l : parent.getLeaves()) {
-            registerLeaf(l);
-        }
-        for (Branch child : parent.getBranches()) {
-            populateItemsMapRecursive(child);
-        }
-    }
+					throw new OPCConnectionException(String.format(NO_SUBGROUP_MSG, pathArray[i], possibleMatches.toString()));
+				}
+			}
+			if (leaf != null) {
+				registerLeaf(leaf);
+			} else {
+				populateItemsMapRecursive(parent);
+			}
+		} catch (Exception ex) {
+			throw new OPCConnectionException(ex.getMessage(), ex);
+		}
+	}
+	public static final String NO_SUBGROUP_MSG = "Unable to find sub-group: %s %nPossible Matches:%s";
 
-    private void registerLeaf(Leaf l) throws JIException, AddFailedException {
-        String itemId = l.getItemId();
-        Item i = opcGroup.addItem(itemId);
-        getOpcItems().put(itemId, i);
-    }
+	public void populateItemsMapRecursive(Branch parent) throws JIException, AddFailedException {
+		for (Leaf l : parent.getLeaves()) {
+			registerLeaf(l);
+		}
+		for (Branch child : parent.getBranches()) {
+			populateItemsMapRecursive(child);
+		}
+	}
 
-    /**
-     * @return the poolSize
-     */
-    public int getPoolSize() {
-        return poolSize;
-    }
+	private void registerLeaf(Leaf l) throws JIException, AddFailedException {
+		String itemId = l.getItemId();
+		Item i = opcGroup.addItem(itemId);
+		getOpcItems().put(itemId, i);
+	}
 
-    /**
-     * @param poolSize the poolSize to set
-     */
-    public void setPoolSize(int poolSize) {
-        this.poolSize = poolSize;
-    }
+	/**
+	 * @return the poolSize
+	 */
+	public int getPoolSize() {
+		return poolSize;
+	}
 
-    /**
-     * @return the clsId
-     */
-    public String getClsId() {
-        return clsId;
-    }
+	/**
+	 * @param poolSize the poolSize to set
+	 */
+	public void setPoolSize(int poolSize) {
+		this.poolSize = poolSize;
+	}
 
-    /**
-     * @param clsId the clsId to set
-     */
-    public void setClsId(String clsId) {
-        this.clsId = clsId;
-    }
+	/**
+	 * @return the clsId
+	 */
+	public String getClsId() {
+		return clsId;
+	}
 
-    /**
-     * @return the progId
-     */
-    public String getProgId() {
-        return progId;
-    }
+	/**
+	 * @param clsId the clsId to set
+	 */
+	public void setClsId(String clsId) {
+		this.clsId = clsId;
+	}
 
-    /**
-     * @param progId the progId to set
-     */
-    public void setProgId(String progId) {
-        this.progId = progId;
-    }
+	/**
+	 * @return the progId
+	 */
+	public String getProgId() {
+		return progId;
+	}
 
-    /**
-     * @return the forceHardwareRead
-     */
-    public boolean isForceHardwareRead() {
-        return forceHardwareRead;
-    }
+	/**
+	 * @param progId the progId to set
+	 */
+	public void setProgId(String progId) {
+		this.progId = progId;
+	}
 
-    /**
-     * @param forceHardwareRead the forceHardwareRead to set
-     */
-    public void setForceHardwareRead(boolean forceHardwareRead) {
-        this.forceHardwareRead = forceHardwareRead;
-    }
+	/**
+	 * @return the forceHardwareRead
+	 */
+	public boolean isForceHardwareRead() {
+		return forceHardwareRead;
+	}
 
-    /**
-     * @return the delay
-     */
-    public int getDelay() {
-        return delay;
-    }
+	/**
+	 * @param forceHardwareRead the forceHardwareRead to set
+	 */
+	public void setForceHardwareRead(boolean forceHardwareRead) {
+		this.forceHardwareRead = forceHardwareRead;
+	}
 
-    /**
-     * @param delay the delay to set
-     */
-    public void setDelay(int delay) {
-        this.delay = delay;
-    }
+	/**
+	 * @return the delay
+	 */
+	public int getDelay() {
+		return delay;
+	}
 
-    /**
-     * @return the diffOnly
-     */
-    public boolean isDiffOnly() {
-        return diffOnly;
-    }
+	/**
+	 * @param delay the delay to set
+	 */
+	public void setDelay(int delay) {
+		this.delay = delay;
+	}
 
-    /**
-     * @param diffOnly the diffOnly to set
-     */
-    public void setDiffOnly(boolean diffOnly) {
-        this.diffOnly = diffOnly;
-    }
+	/**
+	 * @return the diffOnly
+	 */
+	public boolean isDiffOnly() {
+		return diffOnly;
+	}
 
-    /**
-     * @return the valuesOnly
-     */
-    public boolean isValuesOnly() {
-        return valuesOnly;
-    }
+	/**
+	 * @param diffOnly the diffOnly to set
+	 */
+	public void setDiffOnly(boolean diffOnly) {
+		this.diffOnly = diffOnly;
+	}
 
-    /**
-     * @param valuesOnly the valuesOnly to set
-     */
-    public void setValuesOnly(boolean valuesOnly) {
-        this.valuesOnly = valuesOnly;
-    }
+	/**
+	 * @return the valuesOnly
+	 */
+	public boolean isValuesOnly() {
+		return valuesOnly;
+	}
 
-    /**
-     * @return the opcItems
-     */
-    public Map<String, Item> getOpcItems() {
-        return opcItems;
-    }
+	/**
+	 * @param valuesOnly the valuesOnly to set
+	 */
+	public void setValuesOnly(boolean valuesOnly) {
+		this.valuesOnly = valuesOnly;
+	}
 
-    /**
-     * @return the failIfTagAbsent
-     */
-    public boolean isFailIfTagAbsent() {
-        return failIfTagAbsent;
-    }
+	/**
+	 * @return the opcItems
+	 */
+	public Map<String, Item> getOpcItems() {
+		return opcItems;
+	}
 
-    /**
-     * @param failIfTagAbsent the failIfTagAbsent to set
-     */
-    public void setFailIfTagAbsent(boolean failIfTagAbsent) {
-        this.failIfTagAbsent = failIfTagAbsent;
-    }
+	/**
+	 * @return the failIfTagAbsent
+	 */
+	public boolean isFailIfTagAbsent() {
+		return failIfTagAbsent;
+	}
 
-    private final class Opcda2EndpointThreadFactory implements ThreadFactory {
+	/**
+	 * @param failIfTagAbsent the failIfTagAbsent to set
+	 */
+	public void setFailIfTagAbsent(boolean failIfTagAbsent) {
+		this.failIfTagAbsent = failIfTagAbsent;
+	}
 
-        int count = 0;
+	private final class Opcda2EndpointThreadFactory implements ThreadFactory {
 
-        @Override
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(r, Opcda2Endpoint.this.getId() + "_" + count);
-            return t;
-        }
-    }
+		int count = 0;
+
+		@Override
+		public Thread newThread(Runnable r) {
+			Thread t = new Thread(r, Opcda2Endpoint.this.getId() + "_" + count);
+			return t;
+		}
+	}
 }

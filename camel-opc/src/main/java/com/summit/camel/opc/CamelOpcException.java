@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.summit.camel.opc;
 
 /**
@@ -22,21 +21,21 @@ package com.summit.camel.opc;
  */
 public class CamelOpcException extends Exception {
 
-    /**
-     * Creates a new instance of <code>CamelOpcException</code> without detail
-     * message.
-     */
-    public CamelOpcException() {
-    }
+	/**
+	 * Creates a new instance of <code>CamelOpcException</code> without detail
+	 * message.
+	 */
+	public CamelOpcException() {
+	}
 
-    /**
-     * Constructs an instance of <code>CamelOpcException</code> with the
-     * specified detail message.
-     *
-     * @param msg the detail message.
-     */
-    public CamelOpcException(String msg) {
-        super(msg);
-    }
-    
+	/**
+	 * Constructs an instance of <code>CamelOpcException</code> with the
+	 * specified detail message.
+	 *
+	 * @param msg the detail message.
+	 */
+	public CamelOpcException(String msg) {
+		super(msg);
+	}
+
 }

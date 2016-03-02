@@ -19,22 +19,21 @@ package com.summit.camel.opc;
  * limitations under the License.
  * #L%
  */
-
 import java.util.Map;
 import org.apache.camel.Endpoint;
 import org.apache.camel.impl.DefaultComponent;
 
 /**
  * Represents the component that manages {@link Opcda2Endpoint}.
- * 
+ *
  * @author <a href="mailto:justin.smith@summitsystemsinc.com">Justin Smith</a>
  */
 public class Opcda2Component extends DefaultComponent {
-    
-    @Override
-    protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
-        Endpoint endpoint = new Opcda2Endpoint(uri, this);
-        setProperties(endpoint, parameters);
-        return endpoint;
-    }
+
+	@Override
+	protected Endpoint createEndpoint(String uri, String remaining, Map<String, Object> parameters) throws Exception {
+		Endpoint endpoint = new Opcda2Endpoint(uri, this);
+		setProperties(endpoint, parameters);
+		return endpoint;
+	}
 }

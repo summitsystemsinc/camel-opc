@@ -19,21 +19,18 @@ package com.summit.camel.opc;
  * limitations under the License.
  * #L%
  */
-import java.util.Map;
-import org.apache.camel.Exchange;
-import org.apache.camel.impl.DefaultProducer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import static com.summit.camel.opc.Opcda2Endpoint.VALUE;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.Map;
+import org.apache.camel.Exchange;
+import org.apache.camel.impl.DefaultProducer;
 import org.jinterop.dcom.common.JIException;
-import org.jinterop.dcom.core.JIArray;
 import org.jinterop.dcom.core.JICurrency;
-import org.jinterop.dcom.core.JIString;
 import org.jinterop.dcom.core.JIVariant;
 import org.openscada.opc.lib.da.Item;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The opcda2 producer.
@@ -69,8 +66,10 @@ public class Opcda2Producer extends DefaultProducer {
 	 * Its a map, String-&gt;Map(String,Object) (value's type may change...)</p>
 	 *
 	 * @param exchange the camel exchange
-	 * @throws com.summit.camel.opc.CamelOpcException if the data type is not supported or the tag was not found.
-	 * @throws org.jinterop.dcom.common.JIException if there was an error writing the tag.
+	 * @throws com.summit.camel.opc.CamelOpcException if the data type is not
+	 * supported or the tag was not found.
+	 * @throws org.jinterop.dcom.common.JIException if there was an error
+	 * writing the tag.
 	 */
 	@Override
 	public void process(Exchange exchange) throws CamelOpcException, JIException {
